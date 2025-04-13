@@ -15,7 +15,6 @@ def main():
     view = NoteView(root)
     controller = NoteController(model, view)
     
-    # Центрирование окна
     root.update_idletasks()
     width = root.winfo_width()
     height = root.winfo_height()

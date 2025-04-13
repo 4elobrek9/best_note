@@ -1,10 +1,12 @@
 import sqlite3
 from typing import List, Dict, Optional
+from datetime import datetime
 
 class NoteModel:
     def __init__(self, db_name: str = 'notes.db'):
         self.conn = sqlite3.connect(db_name)
         self._create_table()
+        self._add_default_note()
 
     def _create_table(self):
         query = """
@@ -18,6 +20,11 @@ class NoteModel:
         """
         self.conn.execute(query)
         self.conn.commit()
+
+    def _add_default_note(self):
+        """Добавляет заметку по умолчанию, если таблица пуста"""
+        if not self.get_all_notes():
+            self.create_note("Моя первая заметка", "Начните писать здесь...")
 
     def create_note(self, title: str, content: str) -> int:
         query = "INSERT INTO notes (title, content) VALUES (?, ?)"
@@ -41,7 +48,7 @@ class NoteModel:
         self.conn.commit()
 
     def get_note(self, note_id: int) -> Optional[Dict]:
-        query = "SELECT id, title, content, created_at FROM notes WHERE id = ?"
+        query = "SELECT id, title, content, created_at, updated_at FROM notes WHERE id = ?"
         cursor = self.conn.execute(query, (note_id,))
         row = cursor.fetchone()
         if row:
@@ -49,26 +56,28 @@ class NoteModel:
                 'id': row[0],
                 'title': row[1],
                 'content': row[2],
-                'created_at': row[3]
+                'created_at': row[3],
+                'updated_at': row[4]
             }
         return None
 
     def get_all_notes(self) -> List[Dict]:
-        query = "SELECT id, title, content, created_at FROM notes ORDER BY updated_at DESC"
+        query = "SELECT id, title, content, created_at, updated_at FROM notes ORDER BY updated_at DESC"
         cursor = self.conn.execute(query)
         return [
             {
                 'id': row[0],
                 'title': row[1],
                 'content': row[2],
-                'created_at': row[3]
+                'created_at': row[3],
+                'updated_at': row[4]
             }
             for row in cursor.fetchall()
         ]
 
     def search_notes(self, search_term: str) -> List[Dict]:
         query = """
-        SELECT id, title, content, created_at 
+        SELECT id, title, content, created_at, updated_at 
         FROM notes 
         WHERE title LIKE ? OR content LIKE ?
         ORDER BY updated_at DESC
@@ -80,7 +89,8 @@ class NoteModel:
                 'id': row[0],
                 'title': row[1],
                 'content': row[2],
-                'created_at': row[3]
+                'created_at': row[3],
+                'updated_at': row[4]
             }
             for row in cursor.fetchall()
         ]

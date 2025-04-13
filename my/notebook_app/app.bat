@@ -1,3 +1,3 @@
 @echo
-start python app.py
+start /b pythonw app.py
 pause
